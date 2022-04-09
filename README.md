@@ -4,7 +4,7 @@ Mobile-API for zervo anime roleplay social network
 
 ## Example
 ```python3
-# Simple login with google
+# Login with google
 import zervo
 zervoclient = zervo.ZervoClient()
 zervoclient.google_auth(google_id="")
