@@ -4,9 +4,7 @@ Mobile-API for [zervo](https://play.google.com/store/apps/details?id=com.planet.
 
 ## Example
 ```python3
-# Login with google
 import zervo
-zervoclient = zervo.ZervoClient()
-zervoclient.google_auth(google_id="")
-print(f"-- Account user_id is::: {zervoclient.user_id}")
+zervo = zervo.Zervo()
+zervo.google_auth(google_id="")
 ```
