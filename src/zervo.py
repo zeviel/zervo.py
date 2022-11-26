@@ -1,18 +1,39 @@
 import requests
 
-
 class Zervo:
-	def __init__(self, language: str = "en") -> None:
+	def __init__(self, language: str = "en_US") -> None:
 		self.api = "https://wg6.pinpon.cool"
 		self.token = None
 		self.user_id = None
 		self.language = language
 		self.headers = {
-			"User-Agent": "Dart/2.16 (dart:io)",
+			"User-Agent": "Dart/2.18 (dart:io)",
 			"language": self.language
 		}
 	
 	def register(
+			self,
+			email: str,
+			password: str,
+			nickname: str,
+			verification_code: int,
+			birthday: str = "1999-09-09 09:00:00.000Z",
+			sex: int = 1) -> dict:
+		data = {
+			"email": email,
+			"password": password,
+			"source": "email",
+			"code": verification_code,
+			"nickname": nickname,
+			"birthday": birthday,
+			"sex": sex
+		}
+		return requests.post(
+			f"{self.api}/pinpon-app-system/v3/app-user/register",
+			data=data,
+			headers=self.headers).json()
+
+	def register_with_google(
 			self,
 			google_id: str,
 			role_id: int,
@@ -29,8 +50,27 @@ class Zervo:
 			f"{self.api}/pinpon-app-system/v2/app-user/register",
 			data=data,
 			headers=self.headers).json()
-	
-	def google_auth(self, google_id: str) -> dict:
+
+	def login(
+			self,
+			email: str,
+			password: str) -> dict:
+		data = {
+			"email": email,
+			"password": password
+		}
+		response = requests.post(
+			f"{self.api}/pinpon-app-auth/v3/auth/login/email",
+			data=data,
+			headers=self.headers).json()
+		if "token" in response["data"]["pinponToken"]:
+			self.user_id = response["data"]["appUserId"]
+			self.token = response["data"]["pinponToken"]["token"]
+			self.headers["pinpon-auth"] = self.token
+		return response
+
+
+	def login_with_google(self, google_id: str) -> dict:
 		data = {
 			"source": "google",
 			"id": google_id
@@ -45,7 +85,18 @@ class Zervo:
 			self.headers["pinpon-auth"] = self.token
 		return response
 	
-	def send_comment(
+	def request_verification_code(self, email: str) -> dict:
+		data = {
+			"email": email,
+			"type": 2,
+			"language": self.language
+		}
+		return requests.post(
+			f"{self.api}/pinpon-app-system/v2/app-user/mail",
+			data=data,
+			headers=self.headers).json()
+
+	def comment(
 			self,
 			post_id: int,
 			comment: str,
@@ -425,16 +476,19 @@ class Zervo:
 			sort: int = 0) -> dict:
 		data = {
 			"appOC": {
-			"name": name,
-			"bio": description,
-			"isCopy": can_copy
-		},
-		"addAppOcStatues": [{
-			"audioUrl": audio_url,
-			"emotion": emotion,
-			"sort": sort,
-			"url": image_url
-		}]}
+				"name": name,
+				"bio": description,
+				"isCopy": can_copy
+			},
+			"addAppOcStatues": [
+				{
+					"audioUrl": audio_url,
+					"emotion": emotion,
+					"sort": sort,
+					"url": image_url
+				}
+			]
+		}
 		return requests.post(
 			f"{self.api}/pinpon-app-system/app-oc/save",
 			data=data,
@@ -470,4 +524,31 @@ class Zervo:
 	def spin_gachapon(self) -> dict:
 		return requests.post(
 			f"{self.api}/pinpon-app-system/app-library/draw",
+			headers=self.headers).json()
+
+	def choose_avatar(self, template_id: int) -> dict:
+		data = {
+			"avatarTemplateId": template_id
+		}
+		return requests.post(
+			f"{self.api}/pinpon-app-system/app-avatar/choose/template",
+			data=data,
+			headers=self.headers).json()
+
+	def get_recommended_rp(
+			self,
+			current: int = 1,
+			size: int = 20) -> dict:
+		data = {
+			"current": current,
+			"size": size
+		}
+		return requests.post(
+			f"{self.api}/pinpon-app-system/v5/app-recommend/rp",
+			data=data,
+			headers=self.headers).json()
+
+	def get_oc_current_list(self) -> dict:
+		return requests.get(
+			f"{self.api}/pinpon-app-system/app-oc/current/list",
 			headers=self.headers).json()
